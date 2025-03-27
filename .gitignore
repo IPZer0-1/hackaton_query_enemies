@@ -1,0 +1,19 @@
+# Ignorar la carpeta de entorno virtual o variables sensibles
+env/
+.env
+
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Archivos de Log
+*.log
+
+# Ignorar configuraciones de VSCode
+.vscode/
+
+# Ignorar archivos de sistema
+.DS_Store
+Thumbs.db
