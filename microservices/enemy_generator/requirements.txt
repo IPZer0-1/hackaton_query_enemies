@@ -3,8 +3,6 @@ pydantic
 requests
 beautifulsoup4
 gunicorn
-<<<<<<< HEAD
 uvicorn
-=======
-uvicorn
->>>>>>> d6e5863 (Añadido endpoint raíz para comprobación de Render)
+
+
