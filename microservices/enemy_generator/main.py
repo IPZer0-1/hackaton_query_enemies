@@ -100,7 +100,10 @@ def obtener_estadisticas(nombre: str) -> Dict:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))  # Error si ocurre cualquier otro problema
 
-
+@app.get("/")
+def read_root():
+    return {"message": "API is funcionando correctamente"}
+    
 @app.post("/consultar-enemigo/")
 def consultar_enemigo(nombre: str):
     # Endpoint para consultar la información del enemigo
