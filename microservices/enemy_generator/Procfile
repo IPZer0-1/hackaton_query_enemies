@@ -1,1 +1,1 @@
-web: gunicorn -w 1 -k uvicorn.workers.UvicornWorker nombre_del_archivo:app
+web: uvicorn microservices.enemy_generator.main:app --host 0.0.0.0 --port 8000
