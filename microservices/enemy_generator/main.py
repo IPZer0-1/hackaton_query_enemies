@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException  # Importa FastAPI para crear la API y HTTPException para manejar errores HTTP
+from fastapi import FastAPI, HTTPException, Body  # Importa FastAPI para crear la API y HTTPException para manejar errores HTTP
 from pydantic import BaseModel  # Define un modelo de datos para validar y documentar la API
 from typing import Dict  # Tipo de dato para definir que se devolverá un diccionario
 import requests  # Librería para realizar solicitudes HTTP
@@ -12,20 +12,6 @@ app = FastAPI()  # Instancia de FastAPI para definir los endpoints
 
 BESTIARY_URL = "https://clayadavis.gitlab.io/osr-bestiary/bestiary/bfrpg/field-guide-1/"  # URL base del bestiario
 
-class Enemy(BaseModel):
-    # Clase que define el modelo del enemigo a devolver
-    nombre: str
-    armor_class: int
-    hit_dice: str
-    number_of_attacks: str
-    damage: str
-    movement: str
-    number_of_appearing: str
-    save_as: str
-    morale: int
-    treasure_type: str
-    xp: int
-    descripcion: str
 
 class SSLAdapter(HTTPAdapter):
     # Adaptador para permitir conexiones SSL personalizadas
@@ -43,7 +29,7 @@ def obtener_estadisticas(nombre: str) -> Dict:
     try:
         # Limpia el nombre para que sea compatible con URL
         nombre_url = re.sub(r'[^a-zA-Z0-9\- ]', '', nombre).lower().replace(' ', '-')
-        url = f"{BESTIARY_URL}{nombre_url}.html"
+        url = f"{BESTIARY_URL}{nombre_url}/"
 
         # Inicia la sesión con un adaptador SSL para permitir conexiones HTTPS
         session = requests.Session()
@@ -68,7 +54,7 @@ def obtener_estadisticas(nombre: str) -> Dict:
                     # Procesa cada fila de la tabla, asigna clave-valor
                     key = cells[0].get_text(strip=True).lower().replace(' ', '_').replace('.', '').replace(':', '')
                     value = cells[1].get_text(strip=True)
-                    stats[key] = value
+                    stats[key] = value if value else 'Unknown'
 
         # Extrae la descripción del monstruo
         descripcion = ''
@@ -79,19 +65,19 @@ def obtener_estadisticas(nombre: str) -> Dict:
         except:
             descripcion = 'Descripción no disponible.'
 
-        # Devuelve la información recopilada en un diccionario
+        # Devuelve la información recopilada en un diccionario con un formato más limpio
         enemigo = {
             "nombre": nombre,
-            "armor_class": int(stats.get('armor_class', '0')),  
+            "armor_class": int(stats.get('armor_class', '0')) if stats.get('armor_class', '0').isdigit() else stats.get('armor_class', 'Unknown'),
             "hit_dice": stats.get('hit_dice', 'Unknown'),
             "number_of_attacks": stats.get('no_of_attacks', 'Unknown'),
             "damage": stats.get('damage', 'Unknown'),
             "movement": stats.get('movement', 'Unknown'),
             "number_of_appearing": stats.get('no_appearing', 'Unknown'),
             "save_as": stats.get('save_as', 'Unknown'),
-            "morale": int(stats.get('morale', '0')),  
+            "morale": int(stats.get('morale', '0')) if stats.get('morale', '0').isdigit() else stats.get('morale', 'Unknown'),
             "treasure_type": stats.get('treasure_type', 'Unknown'),
-            "xp": int(stats.get('xp', '0')),  
+            "xp": int(stats.get('xp', '0')) if stats.get('xp', '0').isdigit() else stats.get('xp', 'Unknown'),
             "descripcion": descripcion
         }
 
@@ -100,12 +86,14 @@ def obtener_estadisticas(nombre: str) -> Dict:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))  # Error si ocurre cualquier otro problema
 
+
 @app.get("/")
 def read_root():
-    return {"message": "API is funcionando correctamente"}
+    return {"message": "API funcionando correctamente"}
     
+
 @app.post("/consultar-enemigo/")
-def consultar_enemigo(nombre: str):
+def consultar_enemigo(nombre: str = Body(..., embed=True)):
     # Endpoint para consultar la información del enemigo
     enemigo = obtener_estadisticas(nombre)
     return {"enemigo": enemigo}  # Devuelve la información en formato JSON
